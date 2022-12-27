@@ -31,9 +31,12 @@ get_github_app_token <- function(app_id, private_key_path, verbose = TRUE){
         cli::cli_li(paste(name, "-->", permissions[[name]]))
       }
       cli::cli_end()
+
+      invisible(installation_token)
+    } else {
+      return(installation_token)
     }
 
-    return(installation_token)
   },
   error = function(e){cli::cli_alert_danger("Your token couldn't be generated. Try again.")},
   finally = {})
