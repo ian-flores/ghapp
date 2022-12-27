@@ -10,7 +10,6 @@
 #' get_installation_token(jwt, installation$id)
 #' }
 #'
-#' @export
 
 get_installation_token <- function(jwt, installation_id){
   installation_token <- httr2::request(paste0("https://api.github.com/app/installations/", installation_id, "/access_tokens")) %>%

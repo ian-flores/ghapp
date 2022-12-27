@@ -11,7 +11,7 @@ get_github_app_token(app_id, private_key_path, verbose = TRUE)
 
 \item{private_key_path}{Path to the GitHub App Private Key}
 
-\item{verbose}{If TRUE (default), will print the token and it's permissions.
+\item{verbose}{If TRUE (default), will print the token's permissions.
 If false, it will only return the token.}
 }
 \value{

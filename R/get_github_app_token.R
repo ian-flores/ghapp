@@ -2,7 +2,7 @@
 #'
 #' @param app_id GitHub App ID
 #' @param private_key_path Path to the GitHub App Private Key
-#' @param verbose If TRUE (default), will print the token and it's permissions.
+#' @param verbose If TRUE (default), will print the token's permissions.
 #' If false, it will only return the token.
 #'
 #' @return An installation token to make API requests
@@ -24,7 +24,7 @@ get_github_app_token <- function(app_id, private_key_path, verbose = TRUE){
     if (verbose){
       permissions <- installation$permissions
 
-            cli::cli_text("{.emph Your token has the following permissions}")
+      cli::cli_text("{.emph Your token has the following permissions:x}")
       cli::cli_ol()
       for (name in names(permissions)){
         cli::cli_li(paste(name, "-->", permissions[[name]]))
@@ -39,5 +39,4 @@ get_github_app_token <- function(app_id, private_key_path, verbose = TRUE){
   },
   error = function(e){cli::cli_alert_danger("Your token couldn't be generated. Try again.")},
   finally = {})
-
 }

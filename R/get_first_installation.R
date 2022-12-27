@@ -9,7 +9,6 @@
 #' get_first_installation(jwt)
 #' }
 #'
-#' @export
 
 get_first_installation <- function(jwt){
   installation <- httr2::request("https://api.github.com/app/installations") %>%

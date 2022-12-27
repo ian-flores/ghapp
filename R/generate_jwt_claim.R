@@ -10,7 +10,6 @@
 #' generate_jwt_claim(app_id = "2023", private_key_path = "~/Downloads/key.pem")
 #' }
 #'
-#' @export
 
 generate_jwt_claim <- function(app_id, private_key_path){
   private_key <- openssl::read_key(file = private_key_path)
