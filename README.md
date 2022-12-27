@@ -15,6 +15,17 @@ You can install the development version of ghapp from [GitHub](https://github.co
 devtools::install_github("ian-flores/ghapp")
 ```
 
+## Workflow
+
+This package implements the Authenticating as a GitHub App Worflow: https://docs.github.com/en/developers/apps/building-github-apps/authenticating-with-github-apps#authenticating-as-a-github-app
+
+> Authenticating as a GitHub App lets you do a couple of things:
+> 
+> - You can retrieve high-level management information about your GitHub App.
+> - You can request access tokens for an installation of the app.
+> 
+> To authenticate as a GitHub App, generate a private key in PEM format and download it to your local machine. You'll use this key to sign a JSON Web Token (JWT) and encode it using the RS256 algorithm. GitHub checks that the request is authenticated by verifying the token with the app's stored public key.
+
 ## Example
 
 This is an example which shows you how to generate a GitHub App Installation Token.
