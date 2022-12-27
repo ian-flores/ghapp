@@ -21,11 +21,14 @@ This is an example which shows you how to generate a GitHub App Installation Tok
 
 ``` r
 library(ghapp)
+
 app_id <- "12345"
 private_key_path <- "~/Downloads/gh-app-key.pem"
 
-get_github_app_token(app_id, private_key_path)
+token <- get_github_app_token(app_id, private_key_path)
 ```
+
+**The `get_github_app_token()` function returns the token as a value, but will not print it.**
 
 You can obtain both the App ID and the Private Key from the settings page of the GitHub App: https://docs.github.com/en/developers/apps/building-github-apps/authenticating-with-github-apps#generating-a-private-key
 
