@@ -24,8 +24,7 @@ get_github_app_token <- function(app_id, private_key_path, verbose = TRUE){
     if (verbose){
       permissions <- installation$permissions
 
-      cli::cli_alert_info("Your token is: {installation_token}")
-      cli::cli_text("{.emph Your token has the following permissions}")
+            cli::cli_text("{.emph Your token has the following permissions}")
       cli::cli_ol()
       for (name in names(permissions)){
         cli::cli_li(paste(name, "-->", permissions[[name]]))
@@ -34,7 +33,7 @@ get_github_app_token <- function(app_id, private_key_path, verbose = TRUE){
 
       invisible(installation_token)
     } else {
-      return(installation_token)
+      invisible(installation_token)
     }
 
   },
