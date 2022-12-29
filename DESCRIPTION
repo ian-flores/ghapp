@@ -4,7 +4,7 @@ Title: GitHub App Token Generation
 Version: 0.1.0
 Authors@R: c(
     person("Ian", "Flores Siaca",, "ianf@voltrondata.com", role = c("aut", "cre"),
-           comment = c(ORCID = "0000-0002-2739-7082")),
+           comment = c(ORCID = "0000-0002-7573-0708")),
     person("Voltron Data", role = c("cph", "fnd"))
   )
 Description: Package to generate tokens to authenticate with the GitHub API using GitHub Apps.
