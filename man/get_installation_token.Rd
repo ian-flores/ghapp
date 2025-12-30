@@ -4,22 +4,63 @@
 \alias{get_installation_token}
 \title{Get the installation token to make API requests}
 \usage{
-get_installation_token(jwt, installation_id)
+get_installation_token(
+  jwt,
+  installation_id,
+  api_url = Sys.getenv("GHAPP_API_URL", "https://api.github.com"),
+  repositories = NULL,
+  permissions = NULL
+)
 }
 \arguments{
 \item{jwt}{Signed JWT with claim to the GitHub App}
 
 \item{installation_id}{The id of the installation from which we want to obtain the token}
+
+\item{api_url}{Base URL for the GitHub API. Defaults to \code{GHAPP_API_URL}
+environment variable, or \verb{https://api.github.com} if not set.}
+
+\item{repositories}{Character vector of repository names to scope the token to.
+If NULL (default), the token has access to all repositories the installation
+can access.}
+
+\item{permissions}{Named list of permissions to request. Names are permission
+names (e.g., "contents", "issues") and values are access levels ("read" or
+"write"). If NULL (default), uses the installation's default permissions.}
 }
 \value{
-An installation token to make API requests
+A list with:
+\describe{
+\item{token}{Character string containing the installation access token}
+\item{expires_at}{POSIXct timestamp when the token expires}
+\item{permissions}{Named list of granted permissions (if returned by API)}
+\item{repositories}{Character vector of repository names (if scoped)}
+}
 }
 \description{
 Get the installation token to make API requests
 }
 \examples{
 \dontrun{
-get_installation_token(jwt, installation$id)
+# Basic usage
+result <- get_installation_token(jwt, installation$id)
+result$token
+result$expires_at
+
+# With scoped permissions
+result <- get_installation_token(
+  jwt,
+  installation$id,
+  permissions = list(contents = "read", issues = "write")
+)
+
+# With repository scope
+result <- get_installation_token(
+  jwt,
+  installation$id,
+  repositories = c("my-repo", "another-repo")
+)
 }
 
 }
+\keyword{internal}

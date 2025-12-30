@@ -4,12 +4,16 @@
 \alias{generate_jwt_claim}
 \title{Generate a JWT claim signed by a private key}
 \usage{
-generate_jwt_claim(app_id, private_key_path)
+generate_jwt_claim(app_id, private_key_path = NULL, private_key = NULL)
 }
 \arguments{
 \item{app_id}{GitHub App ID}
 
-\item{private_key_path}{Path to the GitHub App Private Key}
+\item{private_key_path}{Path to the GitHub App Private Key. Used if
+\code{private_key} is not provided.}
+
+\item{private_key}{Inline PEM string of the private key. Takes precedence
+over \code{private_key_path} if both are provided.}
 }
 \value{
 Signed JWT with claim to the GitHub App
@@ -19,7 +23,12 @@ Generate a JWT claim signed by a private key
 }
 \examples{
 \dontrun{
+# Using a file path
 generate_jwt_claim(app_id = "2023", private_key_path = "~/Downloads/key.pem")
+
+# Using an inline key
+generate_jwt_claim(app_id = "2023", private_key = "-----BEGIN RSA PRIVATE KEY-----\n...")
 }
 
 }
+\keyword{internal}

@@ -45,7 +45,8 @@ You can obtain both the App ID and the Private Key from the settings page of the
 
 ## License
 
-Copyright 2022 Voltron Data
+Copyright 2022-2024 Voltron Data
+Copyright 2024-present Ian Flores Siaca
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.

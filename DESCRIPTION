@@ -1,20 +1,26 @@
 Package: ghapp
-Type: Package
 Title: GitHub App Token Generation
-Version: 0.1.0
-Authors@R: c(
-    person("Ian", "Flores Siaca",, "ianf@voltrondata.com", role = c("aut", "cre"),
-           comment = c(ORCID = "0000-0002-7573-0708")),
-    person("Voltron Data", role = c("cph", "fnd"))
-  )
-Description: Package to generate tokens to authenticate with the GitHub API using GitHub Apps.
+Version: 0.2.0
+Authors@R: person("Ian", "Flores Siaca", email = "iflores.siaca@gmail.com", role = c("aut", "cre"))
+Description: Generate installation access tokens for GitHub Apps. Supports
+    environment variables for CI/CD, GitHub Enterprise Server, scoped permissions,
+    token caching, and multiple installations.
 License: Apache License (>= 2)
 Encoding: UTF-8
-LazyData: true
-Imports: 
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.3
+Depends:
+    R (>= 4.1.0)
+Imports:
     cli,
     httr2,
     jose,
-    magrittr,
     openssl
-RoxygenNote: 7.2.3
+Suggests:
+    testthat (>= 3.0.0),
+    httptest2,
+    withr,
+    knitr,
+    rmarkdown
+VignetteBuilder: knitr
+Config/testthat/edition: 3

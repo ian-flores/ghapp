@@ -1,0 +1,83 @@
+# Example: Using ghapp to authenticate with GitHub API
+#
+# This workflow demonstrates how to use the ghapp package in CI/CD to generate
+# GitHub App installation tokens for authenticated API calls.
+#
+# Prerequisites:
+# 1. Create a GitHub App at https://github.com/settings/apps
+# 2. Generate and download a private key for your app
+# 3. Install the app on your repository/organization
+# 4. Add repository secrets:
+#    - APP_ID: Your GitHub App's ID (found on app settings page)
+#    - APP_PRIVATE_KEY: Contents of your private key .pem file
+
+name: GitHub App Authentication Example
+
+on:
+  workflow_dispatch:
+    inputs:
+      repository:
+        description: 'Repository to query (owner/repo format)'
+        required: false
+        default: ''
+
+jobs:
+  example:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: '4.3'
+
+      - name: Install ghapp
+        run: |
+          Rscript -e 'install.packages("remotes")'
+          Rscript -e 'remotes::install_github("ian-flores/ghapp")'
+
+      - name: Get GitHub App Token
+        env:
+          GHAPP_APP_ID: ${{ secrets.APP_ID }}
+          GHAPP_PRIVATE_KEY: ${{ secrets.APP_PRIVATE_KEY }}
+        run: |
+          Rscript -e '
+            library(ghapp)
+
+            # Generate installation token using environment variables
+            token <- get_github_app_token(verbose = FALSE)
+
+            # Example: List installations
+            installations <- get_installations()
+            cat("App is installed on:\n")
+            print(installations)
+          '
+
+      - name: Example API Call
+        env:
+          GHAPP_APP_ID: ${{ secrets.APP_ID }}
+          GHAPP_PRIVATE_KEY: ${{ secrets.APP_PRIVATE_KEY }}
+        run: |
+          Rscript -e '
+            library(ghapp)
+
+            # Get token with metadata to check expiration
+            token_obj <- get_github_app_token(simple = FALSE, verbose = FALSE)
+
+            cat(sprintf("Token expires at: %s\n", token_obj$expires_at))
+            cat(sprintf("Permissions: %s\n",
+                paste(names(token_obj$permissions), collapse = ", ")))
+
+            # Use the token for authenticated API calls
+            # Example: Get rate limit info
+            response <- httr2::request("https://api.github.com/rate_limit") |>
+              httr2::req_headers(
+                Authorization = paste("Bearer", token_obj$token),
+                Accept = "application/vnd.github+json"
+              ) |>
+              httr2::req_perform() |>
+              httr2::resp_body_json()
+
+            cat(sprintf("API Rate Limit: %d/%d remaining\n",
+                response$rate$remaining, response$rate$limit))
+          '

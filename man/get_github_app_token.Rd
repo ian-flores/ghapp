@@ -4,26 +4,91 @@
 \alias{get_github_app_token}
 \title{Get the GitHub App Installation Token}
 \usage{
-get_github_app_token(app_id, private_key_path, verbose = TRUE)
+get_github_app_token(
+  app_id = Sys.getenv("GHAPP_APP_ID"),
+  private_key_path = Sys.getenv("GHAPP_PRIVATE_KEY_PATH"),
+  private_key = Sys.getenv("GHAPP_PRIVATE_KEY"),
+  installation_id = NULL,
+  api_url = Sys.getenv("GHAPP_API_URL", "https://api.github.com"),
+  repositories = NULL,
+  permissions = NULL,
+  simple = TRUE,
+  verbose = TRUE
+)
 }
 \arguments{
-\item{app_id}{GitHub App ID}
+\item{app_id}{GitHub App ID. Defaults to \code{GHAPP_APP_ID} environment variable.}
 
-\item{private_key_path}{Path to the GitHub App Private Key}
+\item{private_key_path}{Path to the GitHub App Private Key file. Defaults to
+\code{GHAPP_PRIVATE_KEY_PATH} environment variable. Used if \code{private_key} is not
+provided.}
 
-\item{verbose}{If TRUE (default), will print the token's permissions.
-If false, it will only return the token.}
+\item{private_key}{Inline PEM string of the private key. Defaults to
+\code{GHAPP_PRIVATE_KEY} environment variable. Takes precedence over
+\code{private_key_path} if both are provided.}
+
+\item{installation_id}{Specific installation ID to use. If NULL (default),
+uses the first available installation.}
+
+\item{api_url}{Base URL for the GitHub API. Defaults to \code{GHAPP_API_URL}
+environment variable, or \verb{https://api.github.com} if not set. Use this
+parameter for GitHub Enterprise Server installations.}
+
+\item{repositories}{Character vector of repository names to scope the token to.
+If NULL (default), the token has access to all repositories the installation
+can access.}
+
+\item{permissions}{Named list of permissions to request. Names are permission
+names (e.g., "contents", "issues") and values are access levels ("read" or
+"write"). If NULL (default), uses the installation's default permissions.}
+
+\item{simple}{If TRUE (default), return just the token string for backward
+compatibility. If FALSE, return a \code{ghapp_token} S3 object with metadata
+including expiration time, permissions, and repository scope.}
+
+\item{verbose}{If TRUE (default), prints the token's permissions. If FALSE,
+only returns the token silently.}
 }
 \value{
-An installation token to make API requests
+If \code{simple = TRUE}, an installation token (character string) to make
+API requests, returned invisibly. If \code{simple = FALSE}, a \code{ghapp_token} S3
+object containing the token and metadata (expires_at, permissions, repositories).
 }
 \description{
-Get the GitHub App Installation Token
+Generates an installation token for a GitHub App. Supports environment
+variables for configuration and caches tokens to avoid unnecessary API calls.
 }
 \examples{
 \dontrun{
-get_github_app_token(app_id, private_key_path)
-get_github_app_token(app_id, private_key_path, verbose = FALSE)
+# Using environment variables (recommended)
+Sys.setenv(GHAPP_APP_ID = "123456")
+Sys.setenv(GHAPP_PRIVATE_KEY_PATH = "~/Downloads/key.pem")
+get_github_app_token()
+
+# Using explicit arguments
+get_github_app_token(app_id = "123456", private_key_path = "~/key.pem")
+
+# Using an inline key
+get_github_app_token(app_id = "123456", private_key = "-----BEGIN RSA...")
+
+# Using a specific installation
+get_github_app_token(installation_id = "789012")
+
+# Suppress verbose output
+token <- get_github_app_token(verbose = FALSE)
+
+# Get full token object with metadata
+token_obj <- get_github_app_token(simple = FALSE)
+token_obj$expires_at
+token_obj$permissions
+
+# Scope token to specific repositories
+token <- get_github_app_token(repositories = c("my-repo", "another-repo"))
+
+# Request specific permissions
+token <- get_github_app_token(
+  permissions = list(contents = "read", issues = "write")
+)
 }
 
 }

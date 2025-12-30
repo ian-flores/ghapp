@@ -1,0 +1,290 @@
+---
+title: "Getting Started with ghapp"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Getting Started with ghapp}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  eval = FALSE
+)
+```
+
+## Installation
+
+Install ghapp from GitHub using the remotes package:
+
+```{r install}
+# install.packages("remotes")
+remotes::install_github("ian-flores/ghapp")
+```
+
+## Quick Start
+
+The simplest way to generate a GitHub App installation token is to provide your
+App ID and private key:
+
+```{r quick-start}
+library(ghapp)
+
+# Using explicit arguments
+token <- get_github_app_token(
+  app_id = "123456",
+  private_key_path = "~/Downloads/my-app.private-key.pem"
+)
+
+# Use the token with httr2 or other packages
+httr2::request("https://api.github.com/repos/owner/repo/issues") |>
+  httr2::req_headers(Authorization = paste("Bearer", token)) |>
+  httr2::req_perform()
+```
+
+## Environment Variables
+
+For CI/CD and production use, ghapp supports environment variables so you don't
+need to hard-code credentials:
+
+| Environment Variable      | Description                           | Example                       |
+|---------------------------|---------------------------------------|-------------------------------|
+| `GHAPP_APP_ID`            | Your GitHub App ID                    | `123456`                      |
+| `GHAPP_PRIVATE_KEY_PATH`  | Path to the private key file          | `/path/to/key.pem`            |
+| `GHAPP_PRIVATE_KEY`       | Inline PEM string (takes precedence)  | `-----BEGIN RSA PRIVATE...`   |
+| `GHAPP_API_URL`           | GitHub API URL (for Enterprise)       | `https://github.mycompany.com/api/v3` |
+
+When environment variables are set, you can generate tokens with no arguments:
+
+```{r env-vars}
+# Set environment variables (or configure in CI secrets)
+Sys.setenv(GHAPP_APP_ID = "123456")
+Sys.setenv(GHAPP_PRIVATE_KEY_PATH = "~/Downloads/my-app.private-key.pem")
+
+# Generate token using environment variables
+token <- get_github_app_token()
+```
+
+For CI/CD environments like GitHub Actions where you can't store files, use the
+inline private key:
+
+```{r env-vars-inline}
+# The private key can be passed as a string
+Sys.setenv(GHAPP_PRIVATE_KEY = "-----BEGIN RSA PRIVATE KEY-----
+MIIEowIBAAKCAQEA...
+-----END RSA PRIVATE KEY-----")
+```
+
+## Multiple Installations
+
+A GitHub App can be installed on multiple organizations or user accounts. Use
+`get_installations()` to discover all installations:
+
+```{r installations}
+# List all installations
+installations <- get_installations()
+print(installations)
+#>        id account_login account_type repository_selection
+#> 1 1234567     my-org-1  Organization                  all
+#> 2 2345678     my-org-2  Organization             selected
+#> 3 3456789       my-user         User                  all
+
+# Generate token for a specific installation
+token <- get_github_app_token(installation_id = "2345678")
+```
+
+This is useful when your app is installed on multiple organizations and you need
+to operate on a specific one.
+
+## Token Caching
+
+ghapp automatically caches tokens to avoid unnecessary API calls. GitHub App
+installation tokens are valid for one hour, and ghapp will reuse cached tokens
+until they expire:
+
+```{r caching}
+# First call - fetches from GitHub API
+token1 <- get_github_app_token()
+#> Your token has the following permissions:
+#> 1. contents --> write
+#> 2. issues --> read
+
+# Second call - uses cached token
+token2 <- get_github_app_token()
+#> Using cached token for installation 1234567
+
+# Tokens are identical
+identical(token1, token2)
+#> [1] TRUE
+```
+
+To force a fresh token (e.g., after changing app permissions), clear the cache:
+
+```{r cache-clear}
+# Clear all cached tokens
+cache_clear()
+
+# Or clear a specific token by its cache key
+cache_clear("123456_1234567")
+```
+
+## GitHub Enterprise
+
+For GitHub Enterprise Server installations, specify the `api_url` parameter:
+
+```{r enterprise}
+# Using explicit argument
+token <- get_github_app_token(
+  api_url = "https://github.mycompany.com/api/v3"
+)
+
+# Or set the environment variable
+Sys.setenv(GHAPP_API_URL = "https://github.mycompany.com/api/v3")
+token <- get_github_app_token()
+```
+
+Note: The API URL should end with `/api/v3` for GitHub Enterprise Server.
+
+## Scoped Permissions
+
+By default, tokens have all permissions granted to the GitHub App installation.
+You can request a subset of permissions or limit access to specific repositories:
+
+```{r scoped-permissions}
+# Limit token to specific repositories
+token <- get_github_app_token(
+  repositories = c("my-repo", "another-repo")
+)
+#> Your token has the following permissions:
+#> 1. contents --> write
+#> Scoped to repositories: my-repo, another-repo
+
+# Request only specific permissions (must be subset of app's permissions)
+token <- get_github_app_token(
+  permissions = list(
+    contents = "read",
+    issues = "write"
+  )
+)
+
+# Combine both - specific repos with specific permissions
+token <- get_github_app_token(
+  repositories = c("my-repo"),
+  permissions = list(contents = "read")
+)
+```
+
+This follows the principle of least privilege - request only what you need.
+
+## Token Metadata
+
+By default, `get_github_app_token()` returns just the token string for simplicity.
+For access to token metadata like expiration time, use `simple = FALSE`:
+
+```{r token-metadata}
+# Get full token object with metadata
+token_obj <- get_github_app_token(simple = FALSE)
+
+# Access token metadata
+token_obj$token        # The actual token string
+token_obj$expires_at   # POSIXct expiration timestamp
+token_obj$permissions  # Named list of granted permissions
+token_obj$repositories # Repository scope (if scoped)
+
+# Print shows useful summary
+print(token_obj)
+#> -- GitHub App Installation Token --
+#> Token: ghs_xxxx...
+#> Expires: 2024-01-15 10:30:00 (58 minutes remaining)
+#> Permissions:
+#> 1. contents: write
+#> 2. issues: read
+
+# Convert to character for use in headers
+as.character(token_obj)
+#> [1] "ghs_xxxxxxxxxxxxxxxxxxxx"
+```
+
+The `ghapp_token` S3 class provides:
+
+- **token**: The actual installation access token
+- **expires_at**: When the token expires (POSIXct)
+- **permissions**: Named list of granted permissions
+- **repositories**: Character vector of scoped repositories (if applicable)
+
+## CI/CD Integration
+
+ghapp works seamlessly in CI/CD pipelines. Here's an example GitHub Actions
+workflow:
+
+```yaml
+name: GitHub App Authentication
+
+on:
+  workflow_dispatch:
+
+jobs:
+  example:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: '4.3'
+
+      - name: Install dependencies
+        run: |
+          Rscript -e 'install.packages("remotes")'
+          Rscript -e 'remotes::install_github("ian-flores/ghapp")'
+
+      - name: Use GitHub App Token
+        env:
+          GHAPP_APP_ID: ${{ secrets.APP_ID }}
+          GHAPP_PRIVATE_KEY: ${{ secrets.APP_PRIVATE_KEY }}
+        run: |
+          Rscript -e '
+            library(ghapp)
+
+            # Get token using environment variables
+            token <- get_github_app_token(verbose = FALSE)
+
+            # Use token for API calls
+            response <- httr2::request("https://api.github.com/repos/owner/repo") |>
+              httr2::req_headers(Authorization = paste("Bearer", token)) |>
+              httr2::req_perform() |>
+              httr2::resp_body_json()
+
+            print(response$full_name)
+          '
+```
+
+### Setting Up Secrets
+
+1. In your repository, go to Settings > Secrets and variables > Actions
+2. Add `APP_ID` with your GitHub App's ID
+3. Add `APP_PRIVATE_KEY` with the contents of your private key PEM file
+
+The private key can be copied directly from the `.pem` file including the
+`-----BEGIN RSA PRIVATE KEY-----` and `-----END RSA PRIVATE KEY-----` markers.
+
+## Verbose Output
+
+By default, ghapp prints information about the token's permissions. Use
+`verbose = FALSE` for silent operation:
+
+```{r verbose}
+# Default - shows permissions
+token <- get_github_app_token()
+#> Your token has the following permissions:
+#> 1. contents --> write
+#> 2. issues --> read
+
+# Silent mode
+token <- get_github_app_token(verbose = FALSE)
+# (no output)
+```
+
+Silent mode is recommended for CI/CD pipelines where you don't want extra output.

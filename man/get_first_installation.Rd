@@ -4,10 +4,16 @@
 \alias{get_first_installation}
 \title{Get the first installation of the GitHub App}
 \usage{
-get_first_installation(jwt)
+get_first_installation(
+  jwt,
+  api_url = Sys.getenv("GHAPP_API_URL", "https://api.github.com")
+)
 }
 \arguments{
 \item{jwt}{Signed JWT with claim to the GitHub App}
+
+\item{api_url}{Base URL for the GitHub API. Defaults to \code{GHAPP_API_URL}
+environment variable, or \verb{https://api.github.com} if not set.}
 }
 \value{
 A list with all the values of the first GitHub App installation
@@ -21,3 +27,4 @@ get_first_installation(jwt)
 }
 
 }
+\keyword{internal}
